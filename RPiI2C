@@ -1,0 +1,45 @@
+import smbus
+import time
+from tkinter import *
+import tkinter.font
+
+bus = smbus.SMBus(1)
+
+def getMessage():
+    bus.write_byte_data(0x39, 0x00 | 0x80, 0x03)
+    bus.write_byte_data(0x39, 0x01 | 0x80, 0x02)
+    time.sleep(0.5)
+
+    data = bus.read_i2c_block_data(0x39, 0x0C | 0x80, 2)
+    data1 = bus.read_i2c_block_data(0x39, 0x0E | 0x80, 2)
+
+    ch0 = data[1] * 256 + data[0]
+    ch1 = data1[1] * 256 + data1[0]
+    lux = ch0 - ch1
+    
+    text.set("{} lux".format(lux))
+    
+def close():
+    win.destroy()
+
+win = Tk()
+win.geometry("340x140")
+win.title("8.1 I2C")
+font = tkinter.font.Font(family = "Arial", size = 15, weight = "bold")
+
+Label1Txt = Label(win, font = font)
+Label1Txt.grid(row=0, column = 0)
+text = StringVar()
+text.set("0 Lux")
+Label2Txt = Label(win, textvariable=text, font = font)
+Label2Txt.grid(row=1, column = 1)
+Label3Txt = Label(win, font = font)
+Label3Txt.grid(row=2, column = 0)
+
+luxButton = Button(win, text = "Get Lux", font = font, command = getMessage, height = 1, width = 10)
+luxButton.grid(row=3, column = 0)
+exitButton = Button(win, text = "Exit", font = font, command = close, height = 1, width = 10)
+exitButton.grid(row=3, column = 2)
+
+win.protocol("WM_DELETE_WINDOW", close)
+win.mainloop()
